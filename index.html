@@ -401,6 +401,27 @@ input.ni:focus{border-color:var(--cyan);}
         <h4>🔔 Recordatorios de la semana</h4>
         <div id="alertListAdv"></div>
       </div>
+
+      <!-- FILTRO MES / CAMPAÑA ASESOR -->
+      <div style="background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">🗓 Filtrar por</span>
+        <select class="fsel" id="advFMes" onchange="onAdvFilter()" style="min-width:140px">
+          <option value="">Todos los meses</option>
+          <option value="2026-03">Marzo 2026</option>
+          <option value="2026-02">Febrero 2026</option>
+          <option value="2026-01">Enero 2026</option>
+          <option value="2025-12">Diciembre 2025</option>
+          <option value="2025-11">Noviembre 2025</option>
+        </select>
+        <select class="fsel" id="advFCamp" onchange="onAdvFilter()" style="min-width:140px">
+          <option value="">Todas las campañas</option>
+          <option value="prepaga">🏥 Prepaga</option>
+          <option value="smg">🏢 SMG</option>
+          <option value="otras">📋 Otras</option>
+        </select>
+        <span id="advFilterBadge" style="font-size:12px;color:var(--cyan)"></span>
+      </div>
+
       <div class="advhdr">
         <div><h2 id="apName"></h2><p id="apSub"></p></div>
         <div class="sgrid" id="apStats" style="margin-bottom:0;gap:10px"></div>
@@ -1512,6 +1533,20 @@ function renderAll(){
   t.innerHTML=h+'</tbody>';
 }
 
+function onAdvFilter(){
+  var mes=document.getElementById('advFMes')?document.getElementById('advFMes').value:'';
+  var camp=document.getElementById('advFCamp')?document.getElementById('advFCamp').value:'';
+  var badge=document.getElementById('advFilterBadge');
+  if(badge){
+    var parts=[];
+    if(mes){var ml={'2026-03':'Marzo 2026','2026-02':'Febrero 2026','2026-01':'Enero 2026','2025-12':'Diciembre 2025','2025-11':'Noviembre 2025'};parts.push(ml[mes]||mes);}
+    if(camp){var cl={'prepaga':'Prepaga','smg':'SMG','otras':'Otras'};parts.push(cl[camp]||camp);}
+    badge.textContent=parts.length?'Mostrando: '+parts.join(' · '):'';
+  }
+  renderAdv();
+  renderProspects();
+}
+
 function renderAdvPanel(){
   var ml=S.leads.filter(function(l){return l.advisorId===S.user.id;});
   var v=ml.filter(function(l){return l.status==='venta';}).length;
@@ -1535,7 +1570,16 @@ function renderAdvPanel(){
 
 function renderAdv(){
   var fs=document.getElementById('apFSt').value,fq=document.getElementById('apFSrch').value.toLowerCase();
-  var leads=S.leads.filter(function(l){if(l.advisorId!==S.user.id||l.isProspect)return false;if(fs&&l.status!==fs)return false;if(fq&&!(l.nombre+' '+l.dni).toLowerCase().includes(fq))return false;return true;});
+  var advFMes=document.getElementById('advFMes')?document.getElementById('advFMes').value:'';
+  var advFCamp=document.getElementById('advFCamp')?document.getElementById('advFCamp').value:'';
+  var leads=S.leads.filter(function(l){
+    if(l.advisorId!==S.user.id||l.isProspect)return false;
+    if(fs&&l.status!==fs)return false;
+    if(fq&&!(l.nombre+' '+l.dni).toLowerCase().includes(fq))return false;
+    if(advFMes&&l.mes!==advFMes)return false;
+    if(advFCamp&&(l.campania||'').toLowerCase()!==advFCamp)return false;
+    return true;
+  });
   var t=document.getElementById('advTbl');
   if(!leads.length){t.innerHTML='<tr><td colspan="12" style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:32px;margin-bottom:10px">📭</div>Sin leads asignados aún</td></tr>';return;}
   var h='<thead><tr><th>Nombre y Apellido</th><th>DNI</th><th>Teléfono</th><th>Mail</th><th>Provincia</th><th>F. Nac.</th><th>Estado</th><th>📅 Fecha estado</th><th>Producto</th><th>Prima $</th><th>Notas</th><th style="min-width:120px">WhatsApp</th></tr></thead><tbody>';
@@ -1807,17 +1851,21 @@ function renderProspects(){
   if(!t)return;
   var fs=document.getElementById('prospFSt')?document.getElementById('prospFSt').value:'';
   var fq=document.getElementById('prospFSrch')?document.getElementById('prospFSrch').value.toLowerCase():'';
+  var advFMesP=document.getElementById('advFMes')?document.getElementById('advFMes').value:'';
   var mine=S.leads.filter(function(l){
     if(l.advisorId!==S.user.id||!l.isProspect)return false;
     if(fs&&l.status!==fs)return false;
     if(fq&&!(l.nombre+' '+(l.telefono||'')).toLowerCase().includes(fq))return false;
+    if(advFMesP&&l.mes!==advFMesP)return false;
     return true;
   });
   if(!mine.length){t.innerHTML='';emp.style.display='block';return;}
   emp.style.display='none';
-  var h='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Origen</th><th>Producto</th><th>Prima $</th><th>Estado</th><th>Notas</th><th>WA</th><th></th></tr></thead><tbody>';
+  var h='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Origen</th><th>Producto</th><th>Prima $</th><th>Estado</th><th>📅 Creación</th><th>🔄 Últ. estado</th><th>Notas</th><th>WA</th><th></th></tr></thead><tbody>';
   mine.forEach(function(p){
     var msg=encodeURIComponent('Hola '+p.nombre.split(' ')[0]+', te contacto de Swiss Medical Seguros de Vida.');
+    var fmtD=function(d){return d?new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';};
+    var fmtDT=function(d){if(!d)return'—';var dt=new Date(d);return dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});};
     h+='<tr>'+
       '<td style="font-weight:500">'+p.nombre+'</td>'+
       '<td>'+( p.telefono||'—')+'</td>'+
@@ -1831,6 +1879,8 @@ function renderProspects(){
         '<option value="venta"'+(p.status==='venta'?' selected':'')+'>✅ Venta</option>'+
         '<option value="no-venta"'+(p.status==='no-venta'?' selected':'')+'>❌ No venta</option>'+
       '</select></td>'+
+      '<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+fmtD(p.createdAt)+'</td>'+
+      '<td style="font-size:11px;color:var(--cyan);white-space:nowrap">'+fmtDT(p.updatedAt)+'</td>'+
       '<td><input class="ni" type="text" value="'+esc(p.obs||p.notes||'')+'" placeholder="Notas..." style="min-width:120px" onblur="updNt(\''+p.id+'\',this.value)"></td>'+
       '<td>'+(p.telefono?'<a class="wabtn" href="https://wa.me/'+fmtWA(p.telefono)+'?text='+msg+'" target="_blank">📱 WA</a>':'—')+'</td>'+
       '<td><button onclick="delProspect(\''+p.id+'\')" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:16px" title="Eliminar">🗑️</button></td>'+
