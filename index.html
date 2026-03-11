@@ -8,7 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 :root{--navy:#0a1628;--navy2:#0f1f3d;--navy3:#162848;--cyan:#00d4ff;--cyan2:#00a8cc;--green:#00e676;--yellow:#ffd740;--orange:#ff6d00;--red:#ff3d57;--purple:#b388ff;--glass:rgba(255,255,255,.04);--border:rgba(0,212,255,.15);--border2:rgba(255,255,255,.06);--text:#e8f0fe;--muted:#7a90b8;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden;}.twrap{scrollbar-width:thin;scrollbar-color:var(--cyan2) var(--navy3);}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 10% 0%,rgba(0,212,255,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 90% 100%,rgba(0,168,204,.05) 0%,transparent 55%);}
 #loginScreen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:var(--navy);}
 #loginScreen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(0,212,255,.07) 0%,transparent 70%);}
@@ -125,7 +125,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .fsel{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;}
 .finp{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;flex:1;min-width:180px;}
 .finp::placeholder{color:var(--muted);}
-.twrap{overflow-x:auto;}.twrap::-webkit-scrollbar{height:6px;}.twrap::-webkit-scrollbar-track{background:var(--navy3);border-radius:3px;}.twrap::-webkit-scrollbar-thumb{background:var(--cyan2);border-radius:3px;}.twrap::-webkit-scrollbar-thumb:hover{background:var(--cyan);}
+.twrap{overflow-x:auto;}.twrap::-webkit-scrollbar{height:8px;}.twrap::-webkit-scrollbar-track{background:var(--navy3);border-radius:3px;}.twrap::-webkit-scrollbar-thumb{background:var(--cyan2);border-radius:3px;}.twrap::-webkit-scrollbar-thumb:hover{background:var(--cyan);}
 table.tbl{width:100%;border-collapse:collapse;min-width:1000px;}
 table.tbl th{background:var(--navy3);padding:11px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 table.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.025);white-space:nowrap;}
@@ -451,7 +451,7 @@ input.ni:focus{border-color:var(--cyan);}
         </div>
       </div>
       <div class="sechdr" style="margin-bottom:14px">
-        <h3>Mis Leads Asignados</h3>
+        <h3>Leads Asignados</h3>
         <div style="display:flex;gap:8px">
           <button class="btnppt" onclick="expPPTAdv()">📊 Mi PowerPoint</button>
           <button class="btng" onclick="expXLSAdv()">📤 Excel</button>
@@ -468,7 +468,7 @@ input.ni:focus{border-color:var(--cyan);}
       <!-- PROSPECTOS PROPIOS — arriba de ventas propias -->
       <div style="margin-top:24px">
         <div class="sechdr" style="margin-bottom:12px">
-          <h3>🎯 Mis Prospectos Propios</h3>
+          <h3>🎯 Prospectos Propios</h3>
           <button class="btnp" onclick="openNewProspect()" style="font-size:12px;padding:7px 14px">+ Nuevo prospecto</button>
         </div>
         <div class="lwrap">
@@ -484,7 +484,7 @@ input.ni:focus{border-color:var(--cyan);}
       <!-- VENTAS PROPIAS -->
       <div style="margin-top:28px;margin-bottom:40px">
         <div class="sechdr" style="margin-bottom:16px">
-          <h3>💼 Mis Ventas Propias</h3>
+          <h3>💼 Ventas Propias</h3>
           <span style="font-size:12px;color:var(--muted)">Referidos · Mercado natural · Mixta · Otros</span>
         </div>
         <div style="background:var(--navy2);border:1px solid rgba(0,230,118,.2);border-radius:14px;padding:20px;margin-bottom:20px">
@@ -495,7 +495,7 @@ input.ni:focus{border-color:var(--cyan);}
               <select id="ownOrigen2" class="fsel" style="width:100%">
                 <option value="referido">👥 Referido</option>
                 <option value="mercado-natural">🌿 Mercado natural</option>
-                <option value="mixta">🔀 Mixta Venta</option>
+                <option value="mixta">🔀 Venta Mixta</option>
                 <option value="empresa">🏢 Empresa</option>
                 <option value="otro">📌 Otro</option>
               </select>
@@ -552,7 +552,7 @@ input.ni:focus{border-color:var(--cyan);}
         <select id="pOrigen" class="fsel" style="width:100%">
           <option value="referido">👥 Referido</option>
           <option value="mercado-natural">🌿 Mercado natural</option>
-          <option value="mixta">🔀 Mixta Venta</option>
+          <option value="mixta">🔀 Venta Mixta</option>
           <option value="empresa">🏢 Empresa</option>
           <option value="otro">📌 Otro</option>
         </select>
@@ -567,6 +567,7 @@ input.ni:focus{border-color:var(--cyan);}
           <option value="AP">🟠 AP</option>
         </select>
       </div>
+      <div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">👔 Asesor que refiere <span style="color:var(--muted);font-weight:400">(si aplica)</span></label><input type="text" id="pReferente" class="finp" placeholder="Ej: Juan García" style="width:100%"></div>
       <div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Observaciones</label><input type="text" id="pObs" class="finp" placeholder="Notas iniciales..." style="width:100%"></div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
@@ -689,7 +690,7 @@ var FIELD_MAP={
   mail:['mail','email','correo','e-mail','email address'],
   provincia:['provincia','province','region','localidad','ciudad'],
   fnac:['fecha nac','f. nac','nacimiento','fecha de nacimiento','birth','dob','fnac'],
-  asesorPrepaga:['asesor','asesor prepaga','vendedor','agente','comercial'],
+  asesorPrepaga:['asignado','asesor asignado','asesor','asesor prepaga','vendedor','agente','comercial'],
   estadoExcel:['estado','status','situación','estado crm','resultado']
 };
 
@@ -1709,7 +1710,7 @@ function addOwnSale2(){
 }
 
 // ── VENTAS PROPIAS ──────────────────────────────────────────────
-var ORIG_LABELS={referido:'👥 Referido','mercado-natural':'🌿 Mercado natural',mixta:'🔀 Mixta Venta',empresa:'🏢 Empresa',otro:'📌 Otro'};
+var ORIG_LABELS={referido:'👥 Referido','mercado-natural':'🌿 Mercado natural',mixta:'🔀 Venta Mixta',empresa:'🏢 Empresa',otro:'📌 Otro'};
 
 function addOwnSale(){
   var nombre=document.getElementById('ownNombre').value.trim();
@@ -1785,6 +1786,7 @@ function openNewProspect(){
   document.getElementById('pOrigen').value='referido';
   document.getElementById('pProducto').value='';
   document.getElementById('pObs').value='';
+  if(document.getElementById('pReferente'))document.getElementById('pReferente').value='';
   var m=document.getElementById('prospModal');
   m.style.display='flex';
 }
@@ -1802,6 +1804,7 @@ function saveNewProspect(){
     origen:document.getElementById('pOrigen').value,
     producto:document.getElementById('pProducto').value,
     obs:document.getElementById('pObs').value.trim(),
+    referente:document.getElementById('pReferente')?document.getElementById('pReferente').value.trim():'',
     status:'pendiente',
     createdAt:new Date().toISOString(),
     updatedAt:new Date().toISOString(),
@@ -1861,7 +1864,7 @@ function renderProspects(){
   });
   if(!mine.length){t.innerHTML='';emp.style.display='block';return;}
   emp.style.display='none';
-  var h='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Origen</th><th>Producto</th><th>Prima $</th><th>Estado</th><th>📅 Creación</th><th>🔄 Últ. estado</th><th>Notas</th><th>WA</th><th></th></tr></thead><tbody>';
+  var h='<thead><tr><th>Nombre</th><th>Teléfono</th><th>Origen</th><th>👔 Referente</th><th>Producto</th><th>Prima $</th><th>Estado</th><th>📅 Creación</th><th>🔄 Últ. estado</th><th>Notas</th><th>WA</th><th></th></tr></thead><tbody>';
   mine.forEach(function(p){
     var msg=encodeURIComponent('Hola '+p.nombre.split(' ')[0]+', te contacto de Swiss Medical Seguros de Vida.');
     var fmtD=function(d){return d?new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';};
@@ -1869,7 +1872,7 @@ function renderProspects(){
     h+='<tr>'+
       '<td style="font-weight:500">'+p.nombre+'</td>'+
       '<td>'+( p.telefono||'—')+'</td>'+
-      '<td><span style="background:rgba(179,136,255,.12);color:var(--purple);border:1px solid rgba(179,136,255,.2);border-radius:20px;padding:2px 9px;font-size:11px">'+(ORIG_LABELS[p.origen]||p.origen||'—')+'</span></td>'+
+      '<td><span style="background:rgba(179,136,255,.12);color:var(--purple);border:1px solid rgba(179,136,255,.2);border-radius:20px;padding:2px 9px;font-size:11px">'+(ORIG_LABELS[p.origen]||p.origen||'—')+'</span></td>'+'<td style="font-size:12px;color:var(--cyan)">'+( p.referente||'—')+'</td>'+
       '<td>'+prodBadge(p.producto)+'</td>'+
       '<td><input class="ni" type="number" value="'+(p.prima||'')+'" placeholder="$ prima" min="0" style="width:90px" onblur="updProspPrima(\''+p.id+'\',this.value)"></td>'+
       '<td><select class="ss" onchange="updProspSt(\''+p.id+'\',this.value)">'+
@@ -2069,7 +2072,7 @@ function renderSupPanel(){
         '<div style="display:flex;flex-direction:column;gap:8px">'+
           supCampRow('Referidos',origCounts.referido,'var(--green)')+
           supCampRow('Mercado natural',origCounts['mercado-natural'],'var(--cyan)')+
-          supCampRow('Mixta Venta',origCounts.mixta,'var(--purple)')+
+          supCampRow('Venta Mixta',origCounts.mixta,'var(--purple)')+
           supCampRow('Empresa',origCounts.empresa,'var(--orange)')+
           supCampRow('Otro',origCounts.otro,'var(--muted)')+
         '</div>'+
