@@ -125,7 +125,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .fsel{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;}
 .finp{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;flex:1;min-width:180px;}
 .finp::placeholder{color:var(--muted);}
-.twrap{overflow-x:auto;}
+.twrap{overflow-x:auto;}.twrap::-webkit-scrollbar{height:6px;}.twrap::-webkit-scrollbar-track{background:var(--navy3);border-radius:3px;}.twrap::-webkit-scrollbar-thumb{background:var(--cyan2);border-radius:3px;}.twrap::-webkit-scrollbar-thumb:hover{background:var(--cyan);}
 table.tbl{width:100%;border-collapse:collapse;min-width:1000px;}
 table.tbl th{background:var(--navy3);padding:11px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 table.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.025);white-space:nowrap;}
@@ -1582,11 +1582,11 @@ function renderAdv(){
   });
   var t=document.getElementById('advTbl');
   if(!leads.length){t.innerHTML='<tr><td colspan="12" style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:32px;margin-bottom:10px">📭</div>Sin leads asignados aún</td></tr>';return;}
-  var h='<thead><tr><th>Nombre y Apellido</th><th>DNI</th><th>Teléfono</th><th>Mail</th><th>Provincia</th><th>F. Nac.</th><th>Estado</th><th>📅 Fecha estado</th><th>Producto</th><th>Prima $</th><th>Notas</th><th style="min-width:120px">WhatsApp</th></tr></thead><tbody>';
+  var h='<thead><tr><th>Nombre y Apellido</th><th>DNI</th><th>Teléfono</th><th>Mail</th><th>Provincia</th><th>F. Nac.</th><th>Asesor Prepaga</th><th>Estado</th><th>📅 Fecha estado</th><th>Producto</th><th>Prima $</th><th>Notas</th><th style="min-width:120px">WhatsApp</th></tr></thead><tbody>';
   leads.forEach(function(l){
     var msg=encodeURIComponent('Hola '+l.nombre.split(' ')[0]+', te contacto de Swiss Medical Seguros de Vida.');
     var fechaEst=l.updatedAt?new Date(l.updatedAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-    h+='<tr><td>'+l.nombre+'</td><td>'+l.dni+'</td><td>'+l.telefono+'</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis">'+l.mail+'</td><td>'+l.provincia+'</td><td>'+l.fnac+'</td>'+
+    h+='<tr><td>'+l.nombre+'</td><td>'+l.dni+'</td><td>'+l.telefono+'</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis">'+l.mail+'</td><td>'+l.provincia+'</td><td>'+l.fnac+'</td>'+'<td style="font-size:12px;color:var(--purple)">'+( l.asesorPrepaga||'—')+'</td>'+
     '<td><select class="ss" onchange="updSt(\''+l.id+'\',this.value)">'+
     '<option value="pendiente"'+(l.status==='pendiente'?' selected':'')+'>⏳ Pendiente</option>'+
     '<option value="en-gestion"'+(l.status==='en-gestion'?' selected':'')+'>🔄 En gestión</option>'+
