@@ -428,6 +428,9 @@ input.ni:focus{border-color:var(--cyan);}
       </div>
       <div id="advPlanCounter"></div>
 
+      <!-- DESGLOSE POR ORIGEN -->
+      <div id="origenBreakdown" style="margin-bottom:24px"></div>
+
       <!-- VISTA SEMANAL ASESOR -->
       <div class="chartbox" style="margin-bottom:24px">
         <h3>📅 Prima por semana del mes</h3>
@@ -524,7 +527,8 @@ input.ni:focus{border-color:var(--cyan);}
 
     <!-- PANEL SUPERVISOR -->
     <div id="supPanel" style="display:none">
-      <div id="supPanelContent" style="padding:0"></div>
+      <div id="origenBreakdown" style="margin-bottom:0"></div>
+    <div id="supPanelContent" style="padding:0"></div>
     </div>
 
   </div>
@@ -632,6 +636,7 @@ function syncLeads(){
     if(S.user&&S.user.role==='admin'){renderDash();renderAll();}
     if(S.user&&S.user.role==='advisor'){
       renderAdvStats();checkAlertsBanner();
+      renderOrigenBreakdown();
       renderOwnSales();renderProspects();
       renderAdv(); // refrescar tabla de leads
     }
@@ -1600,6 +1605,86 @@ function onAdvFilter(){
   renderProspects();
 }
 
+function renderOrigenBreakdown(){
+  var el=document.getElementById('origenBreakdown');
+  if(!el)return;
+  var isAdv=S.user&&S.user.role==='advisor';
+  var isSup=S.user&&S.user.role==='supervisor';
+  var uid=S.user?S.user.id:null;
+
+  // Definir orígenes
+  var origenes=[
+    {key:'prepaga', label:'🏥 Campaña Prepaga', color:'var(--cyan)', test:function(l){return !l.isProspect&&(l.campania||'').toLowerCase().includes('prepaga');}},
+    {key:'smg',     label:'🏢 Campaña SMG',     color:'var(--purple)', test:function(l){return !l.isProspect&&(l.campania||'').toLowerCase().includes('smg');}},
+    {key:'otras',   label:'📋 Otras Campañas',  color:'var(--yellow)', test:function(l){return !l.isProspect&&(l.campania||'')!==''&&!(l.campania||'').toLowerCase().includes('prepaga')&&!(l.campania||'').toLowerCase().includes('smg');}},
+    {key:'propios', label:'🎯 Datos Propios',   color:'var(--green)',  test:function(l){return !!l.isProspect;}}
+  ];
+
+  function getLeads(filterFn){
+    return S.leads.filter(function(l){
+      if(isAdv&&l.advisorId!==uid)return false;
+      if(isSup){var myAdvIds=S.advisors.filter(function(a){return a.supervisor===S.user.name;}).map(function(a){return a.id;});if(myAdvIds.indexOf(l.advisorId)<0)return false;}
+      return filterFn(l);
+    });
+  }
+
+  function calcStats(leads){
+    var v=leads.filter(function(l){return l.status==='venta';});
+    var cot=leads.filter(function(l){return l.status==='cotizado';});
+    var g=leads.filter(function(l){return l.status==='en-gestion';});
+    var p=leads.filter(function(l){return l.status==='pendiente';});
+    var nv=leads.filter(function(l){return l.status==='no-venta'||l.status==='imposible';});
+    var primaV=v.reduce(function(a,l){return a+(parseFloat(l.prima)||0);},0);
+    var primaC=cot.reduce(function(a,l){return a+(parseFloat(l.prima)||0);},0);
+    var conv=leads.length?Math.round(v.length/leads.length*1000)/10:0;
+    return{total:leads.length,v:v.length,cot:cot.length,g:g.length,p:p.length,nv:nv.length,primaV:primaV,primaC:primaC,conv:conv};
+  }
+
+  var html='<div style="margin-bottom:8px"><div style="font-family:Syne,sans-serif;font-weight:700;font-size:17px;margin-bottom:16px">📊 Resultados por Origen</div>';
+  var hasAny=false;
+
+  origenes.forEach(function(orig){
+    var leads=getLeads(orig.test);
+    if(!leads.length)return;
+    hasAny=true;
+    var s=calcStats(leads);
+    html+='<div style="background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:14px;border-left:4px solid '+orig.color+'">';
+    html+='<div style="font-family:Syne,sans-serif;font-weight:700;font-size:15px;margin-bottom:14px;color:'+orig.color+'">'+orig.label+'</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px">';
+    var stats=[
+      {lbl:'Total',val:s.total,col:'var(--text)'},
+      {lbl:'Ventas',val:s.v,col:'var(--green)'},
+      {lbl:'Cotizados',val:s.cot,col:'var(--cyan)'},
+      {lbl:'En Gestión',val:s.g,col:'var(--yellow)'},
+      {lbl:'Pendientes',val:s.p,col:'var(--muted)'},
+      {lbl:'No Venta',val:s.nv,col:'var(--red)'},
+      {lbl:'Conversión',val:s.conv+'%',col:orig.color}
+    ];
+    stats.forEach(function(st){
+      html+='<div style="background:var(--navy3);border-radius:10px;padding:10px 12px">'+
+        '<div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">'+st.lbl+'</div>'+
+        '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:22px;color:'+st.col+'">'+st.val+'</div>'+
+      '</div>';
+    });
+    // Prima row
+    if(s.primaV>0||s.primaC>0){
+      html+='<div style="background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.15);border-radius:10px;padding:10px 12px">'+
+        '<div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">💰 Prima Ventas</div>'+
+        '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:18px;color:var(--green)">'+fmtARS(s.primaV)+'</div>'+
+      '</div>';
+      html+='<div style="background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:10px 12px">'+
+        '<div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">💬 Prima Cotizados</div>'+
+        '<div style="font-family:Syne,sans-serif;font-weight:800;font-size:18px;color:var(--cyan)">'+fmtARS(s.primaC)+'</div>'+
+      '</div>';
+    }
+    html+='</div></div>';
+  });
+
+  if(!hasAny)html+='<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center">Sin datos suficientes para mostrar el desglose</div>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+
 function renderAdvPanel(){
   var ml=S.leads.filter(function(l){return l.advisorId===S.user.id;});
   var v=ml.filter(function(l){return l.status==='venta';}).length;
@@ -1614,6 +1699,7 @@ function renderAdvPanel(){
   document.getElementById('apSub').textContent=supTxt+ml.length+' leads asignados';
   renderAdvStats();
   checkAlertsBanner();
+  renderOrigenBreakdown();
   var myLeads=S.leads.filter(function(l){return l.advisorId===S.user.id&&!l.isProspect;});
   setTimeout(function(){renderChartsAdv(myLeads);renderWeekBarChart(myLeads,'weekBarChartAdv');},300);
   renderAdv();
@@ -2099,6 +2185,7 @@ function renderSupPanel(){
   });
 
   var el=document.getElementById('supPanelContent');if(!el)return;
+  renderOrigenBreakdown();
 
   // Stats globales del equipo
   function byS(s){return myLeads.filter(function(l){return l.status===s;}).length;}
