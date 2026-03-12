@@ -1261,24 +1261,76 @@ function checkAlertsBanner(){
   var isAdv=S.user&&S.user.role==='advisor';
   var bannerId=isAdv?'alertBannerAdv':'alertBanner';
   var listId=isAdv?'alertListAdv':'alertList';
-  var cotizados=S.leads.filter(function(l){
-    if(isAdv&&l.advisorId!==S.user.id)return false;
-    return l.status==='cotizado';
-  });
   var banner=document.getElementById(bannerId);
   var list=document.getElementById(listId);
   if(!banner||!list)return;
-  if(!cotizados.length){banner.style.display='none';return;}
+
+  var now=new Date();
+  var alerts=[];
+
+  // Cotizados sin contacto
+  S.leads.filter(function(l){
+    if(isAdv&&l.advisorId!==S.user.id)return false;
+    return l.status==='cotizado';
+  }).forEach(function(l){
+    var dias=l.updatedAt?Math.floor((now-new Date(l.updatedAt))/86400000):null;
+    var urgencia=dias===null?'normal':dias>=7?'alta':dias>=3?'media':'normal';
+    alerts.push({l:l,dias:dias,tipo:'cotizado',urgencia:urgencia});
+  });
+
+  // En gestión sin contacto hace 5+ días
+  S.leads.filter(function(l){
+    if(isAdv&&l.advisorId!==S.user.id)return false;
+    return l.status==='en-gestion';
+  }).forEach(function(l){
+    var dias=l.updatedAt?Math.floor((now-new Date(l.updatedAt))/86400000):null;
+    if(dias!==null&&dias>=5){
+      alerts.push({l:l,dias:dias,tipo:'gestion',urgencia:dias>=10?'alta':'media'});
+    }
+  });
+
+  // Ordenar: alta urgencia primero, luego por días desc
+  alerts.sort(function(a,b){
+    var ord={alta:0,media:1,normal:2};
+    if(ord[a.urgencia]!==ord[b.urgencia])return ord[a.urgencia]-ord[b.urgencia];
+    return (b.dias||0)-(a.dias||0);
+  });
+
+  if(!alerts.length){banner.style.display='none';return;}
   banner.style.display='block';
-  list.innerHTML=cotizados.slice(0,8).map(function(l){
-    var dias='';
-    if(l.updatedAt){var d=Math.floor((new Date()-new Date(l.updatedAt))/86400000);dias=d+' día'+(d!==1?'s':'')+' sin contacto';}
+
+  var colores={alta:'var(--red)',media:'var(--yellow)',normal:'var(--cyan)'};
+  var iconos={cotizado:'💬',gestion:'🔄'};
+  var urgTxt={alta:'🔴 URGENTE',media:'🟡 Seguimiento',normal:'🔵 Recordatorio'};
+
+  list.innerHTML=alerts.slice(0,10).map(function(item){
+    var l=item.l;
     var adv=S.advisors.find(function(a){return a.id===l.advisorId;});
     var advInfo=(!isAdv&&adv)?'<span style="color:var(--purple);font-size:11px"> · '+adv.name+'</span>':'';
-    var msg=encodeURIComponent('Hola '+l.nombre.split(' ')[0]+', te contacto de Swiss Medical para continuar con tu cotización.');
-    return'<div class="alert-item"><span class="alert-name">💬 '+l.nombre+(l.dni?' · DNI '+l.dni:'')+advInfo+'</span>'+(dias?'<span class="alert-days">⏱ '+dias+'</span>':'')+'<a class="alert-wa" href="https://wa.me/'+fmtWA(l.telefono)+'?text='+msg+'" target="_blank">📱 Contactar</a></div>';
+    var diasTxt=item.dias!==null?item.dias+' día'+(item.dias!==1?'s':'')+' sin contacto':'sin fecha';
+    var msg=item.tipo==='cotizado'
+      ?encodeURIComponent('Hola '+l.nombre.split(' ')[0]+', te contacto de Swiss Medical para continuar con tu cotización de Seguros de Vida.')
+      :encodeURIComponent('Hola '+l.nombre.split(' ')[0]+', te contacto de Swiss Medical para darle seguimiento a tu consulta.');
+    return '<div class="alert-item" style="border-left:3px solid '+colores[item.urgencia]+';padding-left:10px;margin-bottom:8px">'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        '<span style="font-size:10px;font-weight:700;color:'+colores[item.urgencia]+'">'+urgTxt[item.urgencia]+'</span>'+
+        '<span class="alert-name">'+iconos[item.tipo]+' '+l.nombre+(l.dni?' · DNI '+l.dni:'')+advInfo+'</span>'+
+        '<span class="alert-days" style="color:'+colores[item.urgencia]+'">⏱ '+diasTxt+'</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">'+
+        (l.telefono?'<a class="alert-wa" href="https://wa.me/'+fmtWA(l.telefono)+'?text='+msg+'" target="_blank">📱 WhatsApp</a>':'')+
+        (l.mail?'<a class="alert-wa" href="mailto:'+l.mail+'?subject=Swiss Medical - Seguros de Vida&body='+msg+'" style="background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.2);color:var(--cyan)">📧 Mail</a>':'')+
+      '</div>'+
+    '</div>';
   }).join('');
-  if(cotizados.length>8)list.innerHTML+='<div style="color:var(--muted);font-size:12px;padding-top:8px">... y '+(cotizados.length-8)+' más en cotizado</div>';
+
+  var extra=alerts.length-10;
+  if(extra>0)list.innerHTML+='<div style="color:var(--muted);font-size:12px;padding-top:8px">... y '+extra+' recordatorios más</div>';
+
+  // Actualizar título con conteo
+  var hdr=banner.querySelector('h4');
+  var rojos=alerts.filter(function(a){return a.urgencia==='alta';}).length;
+  if(hdr)hdr.innerHTML='🔔 Recordatorios '+(rojos>0?'<span style="background:var(--red);color:white;border-radius:10px;padding:1px 8px;font-size:12px;margin-left:6px">'+rojos+' urgentes</span>':'')+'<span style="font-size:12px;color:var(--muted);margin-left:8px">'+alerts.length+' en total</span>';
 }
 
 function renderWeekCompare(){
@@ -1587,7 +1639,11 @@ function renderAdv(){
   leads.forEach(function(l){
     var msg=encodeURIComponent('Hola '+l.nombre.split(' ')[0]+', te contacto de Swiss Medical Seguros de Vida.');
     var fechaEst=l.updatedAt?new Date(l.updatedAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-    h+='<tr><td>'+l.nombre+'</td><td>'+l.dni+'</td><td>'+l.telefono+'</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis">'+l.mail+'</td><td>'+l.provincia+'</td><td>'+l.fnac+'</td>'+'<td style="font-size:12px;color:var(--purple)">'+( l.asesorPrepaga||'—')+'</td>'+
+    var qid=l.id.replace(/'/g,"\'");
+    h+='<tr><td>'+l.nombre+'</td><td>'+l.dni+'</td>'+
+    '<td><input class="ni upd-tel" data-id="'+l.id+'" type="text" value="'+esc(l.telefono||'')+'" placeholder="Teléfono..." style="width:120px"></td>'+
+    '<td><input class="ni upd-mail" data-id="'+l.id+'" type="text" value="'+esc(l.mail||'')+'" placeholder="Mail..." style="min-width:140px"></td>'+
+    '<td>'+l.provincia+'</td><td>'+l.fnac+'</td>'+'<td style="font-size:12px;color:var(--purple)">'+( l.asesorPrepaga||'—')+'</td>'+
     '<td><select class="ss" onchange="updSt(\''+l.id+'\',this.value)">'+
     '<option value="pendiente"'+(l.status==='pendiente'?' selected':'')+'>⏳ Pendiente</option>'+
     '<option value="en-gestion"'+(l.status==='en-gestion'?' selected':'')+'>🔄 En gestión</option>'+
@@ -1610,6 +1666,13 @@ function renderAdv(){
     '<td><a class="wabtn" href="https://wa.me/'+fmtWA(l.telefono)+'?text='+msg+'" target="_blank">📱 WhatsApp</a></td></tr>';
   });
   t.innerHTML=h+'</tbody>';
+  // Event delegation for editable phone/mail
+  t.querySelectorAll('.upd-tel').forEach(function(inp){
+    inp.addEventListener('blur',function(){updTel(this.getAttribute('data-id'),this.value);});
+  });
+  t.querySelectorAll('.upd-mail').forEach(function(inp){
+    inp.addEventListener('blur',function(){updMail(this.getAttribute('data-id'),this.value);});
+  });
 }
 
 function updSt(id,st){
@@ -1640,6 +1703,20 @@ function updPrima(id,val){
   });
 }
 function updNt(id,nt){var l=S.leads.find(function(x){return x.id===id;});if(!l)return;l.notes=nt;l.updatedAt=new Date().toISOString();apiPost({action:'updateLead',id:id,status:l.status,notes:nt,producto:l.producto||'',prima:l.prima||0});}
+function updTel(id,val){
+  var l=S.leads.find(function(x){return x.id===id;});if(!l)return;
+  var old=l.telefono;l.telefono=val.trim();
+  apiPost({action:'saveLeads',leads:S.leads}).then(function(){
+    if(val.trim()!==old)toast('📱','Teléfono actualizado ☁️');
+  });
+}
+function updMail(id,val){
+  var l=S.leads.find(function(x){return x.id===id;});if(!l)return;
+  var old=l.mail;l.mail=val.trim();
+  apiPost({action:'saveLeads',leads:S.leads}).then(function(){
+    if(val.trim()!==old)toast('📧','Mail actualizado ☁️');
+  });
+}
 
 function renderAdvStats(){
   var ml=S.leads.filter(function(l){return l.advisorId===S.user.id;});
