@@ -500,6 +500,7 @@ input.ni:focus{border-color:var(--cyan);}
                 <option value="mercado-natural">🌿 Mercado natural</option>
                 <option value="mixta">🔀 Venta Mixta</option>
                 <option value="empresa">🏢 Empresa</option>
+                <option value="datos-web">🌐 Datos Web</option>
                 <option value="otro">📌 Otro</option>
               </select>
             </div>
@@ -558,6 +559,7 @@ input.ni:focus{border-color:var(--cyan);}
           <option value="mercado-natural">🌿 Mercado natural</option>
           <option value="mixta">🔀 Venta Mixta</option>
           <option value="empresa">🏢 Empresa</option>
+          <option value="datos-web">🌐 Datos Web</option>
           <option value="otro">📌 Otro</option>
         </select>
       </div>
@@ -1586,9 +1588,21 @@ function renderAll(){
   leads.forEach(function(l){
     var adv=S.advisors.find(function(a){return a.id===l.advisorId;});
     var fechaEst=l.updatedAt?new Date(l.updatedAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';
-    h+='<tr><td>'+l.nombre+'</td><td>'+l.dni+'</td><td>'+l.telefono+'</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis">'+l.mail+'</td><td>'+l.provincia+'</td><td>'+l.fnac+'</td><td style="color:var(--cyan)">'+(adv?adv.name:'—')+'</td><td style="color:var(--purple);font-size:12px">'+(adv&&adv.supervisor?adv.supervisor:'—')+'</td><td>'+campBadge(l.campania)+'</td><td>'+badge(l.status)+'</td><td style="font-size:11px;color:var(--cyan);white-space:nowrap">'+fechaEst+'</td><td>'+prodBadge(l.producto)+'</td><td style="color:var(--muted);font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis">'+(l.notes||'—')+'</td><td><a class="wabtn" href="https://wa.me/'+fmtWA(l.telefono)+'" target="_blank">📱 WA</a></td></tr>';
+    h+='<tr><td><input class="ni upd-nombre" data-id="'+l.id+'" type="text" value="'+esc(l.nombre||'')+'" placeholder="Nombre..." style="min-width:160px"></td><td>'+l.dni+'</td>'+
+    '<td><input class="ni upd-tel" data-id="'+l.id+'" type="text" value="'+esc(l.telefono||'')+'" placeholder="Teléfono..." style="width:130px"></td>'+
+    '<td><input class="ni upd-mail" data-id="'+l.id+'" type="text" value="'+esc(l.mail||'')+'" placeholder="Mail..." style="min-width:140px"></td>'+
+    '<td>'+l.provincia+'</td><td>'+l.fnac+'</td><td style="color:var(--cyan)">'+(adv?adv.name:'—')+'</td><td style="color:var(--purple);font-size:12px">'+(adv&&adv.supervisor?adv.supervisor:'—')+'</td><td>'+campBadge(l.campania)+'</td><td>'+badge(l.status)+'</td><td style="font-size:11px;color:var(--cyan);white-space:nowrap">'+fechaEst+'</td><td>'+prodBadge(l.producto)+'</td><td style="color:var(--muted);font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis">'+(l.notes||'—')+'</td><td><a class="wabtn" href="https://wa.me/'+fmtWA(l.telefono)+'" target="_blank">📱 WA</a></td></tr>';
   });
   t.innerHTML=h+'</tbody>';
+  t.querySelectorAll('.upd-nombre').forEach(function(inp){
+    inp.addEventListener('blur',function(){updNombre(this.getAttribute('data-id'),this.value);});
+  });
+  t.querySelectorAll('.upd-tel').forEach(function(inp){
+    inp.addEventListener('blur',function(){updTel(this.getAttribute('data-id'),this.value);});
+  });
+  t.querySelectorAll('.upd-mail').forEach(function(inp){
+    inp.addEventListener('blur',function(){updMail(this.getAttribute('data-id'),this.value);});
+  });
 }
 
 function onAdvFilter(){
@@ -1726,7 +1740,7 @@ function renderAdv(){
     var msg=encodeURIComponent('Hola '+l.nombre.split(' ')[0]+', te contacto de Swiss Medical Seguros de Vida.');
     var fechaEst=l.updatedAt?new Date(l.updatedAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     var qid=l.id.replace(/'/g,"\'");
-    h+='<tr><td>'+l.nombre+'</td><td>'+l.dni+'</td>'+
+    h+='<tr><td><input class="ni upd-nombre" data-id="'+l.id+'" type="text" value="'+esc(l.nombre||'')+'" placeholder="Nombre..." style="min-width:160px"></td><td>'+l.dni+'</td>'+
     '<td><input class="ni upd-tel" data-id="'+l.id+'" type="text" value="'+esc(l.telefono||'')+'" placeholder="Teléfono..." style="width:120px"></td>'+
     '<td><input class="ni upd-mail" data-id="'+l.id+'" type="text" value="'+esc(l.mail||'')+'" placeholder="Mail..." style="min-width:140px"></td>'+
     '<td>'+l.provincia+'</td><td>'+l.fnac+'</td>'+'<td style="font-size:12px;color:var(--purple)">'+( l.asesorPrepaga||'—')+'</td>'+
@@ -1753,6 +1767,9 @@ function renderAdv(){
   });
   t.innerHTML=h+'</tbody>';
   // Event delegation for editable phone/mail
+  t.querySelectorAll('.upd-nombre').forEach(function(inp){
+    inp.addEventListener('blur',function(){updNombre(this.getAttribute('data-id'),this.value);});
+  });
   t.querySelectorAll('.upd-tel').forEach(function(inp){
     inp.addEventListener('blur',function(){updTel(this.getAttribute('data-id'),this.value);});
   });
@@ -1801,6 +1818,13 @@ function updMail(id,val){
   var old=l.mail;l.mail=val.trim();
   apiPost({action:'saveLeads',leads:S.leads}).then(function(){
     if(val.trim()!==old)toast('📧','Mail actualizado ☁️');
+  });
+}
+function updNombre(id,val){
+  var l=S.leads.find(function(x){return x.id===id;});if(!l)return;
+  var old=l.nombre;l.nombre=val.trim();
+  apiPost({action:'saveLeads',leads:S.leads}).then(function(){
+    if(val.trim()!==old)toast('✏️','Nombre actualizado ☁️');
   });
 }
 
@@ -1873,7 +1897,7 @@ function addOwnSale2(){
 }
 
 // ── VENTAS PROPIAS ──────────────────────────────────────────────
-var ORIG_LABELS={referido:'👥 Referido','mercado-natural':'🌿 Mercado natural',mixta:'🔀 Venta Mixta',empresa:'🏢 Empresa',otro:'📌 Otro'};
+var ORIG_LABELS={referido:'👥 Referido','mercado-natural':'🌿 Mercado natural',mixta:'🔀 Venta Mixta',empresa:'🏢 Empresa','datos-web':'🌐 Datos Web',otro:'📌 Otro'};
 
 function addOwnSale(){
   var nombre=document.getElementById('ownNombre').value.trim();
@@ -2221,27 +2245,60 @@ function renderSupPanel(){
       '<div class="sc" style="border-color:rgba(0,212,255,.3)"><div class="slbl">💬 Prima Cotizados</div><div class="sval c">'+fmtARS(primaC)+'</div></div>'+
     '</div>'+
 
-    // Leads por campaña + origen
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">'+
-      '<div style="background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:16px">'+
-        '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">📦 Por campaña</div>'+
-        '<div style="display:flex;flex-direction:column;gap:8px">'+
-          supCampRow('Prepaga',campCounts.prepaga,'var(--cyan)')+
-          supCampRow('SMG Cells',campCounts.smg,'var(--purple)')+
-          supCampRow('Otras',campCounts.otras,'var(--yellow)')+
-        '</div>'+
-      '</div>'+
-      '<div style="background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:16px">'+
-        '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">🌱 Por origen (prospectos propios)</div>'+
-        '<div style="display:flex;flex-direction:column;gap:8px">'+
-          supCampRow('Referidos',origCounts.referido,'var(--green)')+
-          supCampRow('Mercado natural',origCounts['mercado-natural'],'var(--cyan)')+
-          supCampRow('Venta Mixta',origCounts.mixta,'var(--purple)')+
-          supCampRow('Empresa',origCounts.empresa,'var(--orange)')+
-          supCampRow('Otro',origCounts.otro,'var(--muted)')+
-        '</div>'+
-      '</div>'+
-    '</div>'+
+    // Desglose detallado por origen
+    (function(){
+      function calcOrig(filterFn){
+        var leads=myLeads.filter(filterFn);
+        var v=leads.filter(function(l){return l.status==='venta';}).length;
+        var cot=leads.filter(function(l){return l.status==='cotizado';}).length;
+        var g=leads.filter(function(l){return l.status==='en-gestion';}).length;
+        var p=leads.filter(function(l){return l.status==='pendiente';}).length;
+        var nv=leads.filter(function(l){return l.status==='no-venta'||l.status==='imposible';}).length;
+        var conv=leads.length?Math.round(v/leads.length*1000)/10:0;
+        var primaV=leads.filter(function(l){return l.status==='venta';}).reduce(function(a,l){return a+(parseFloat(l.prima)||0);},0);
+        return{total:leads.length,v:v,cot:cot,g:g,p:p,nv:nv,conv:conv,primaV:primaV};
+      }
+      function origenCard(title,color,stats){
+        if(!stats.total)return'';
+        return'<div style="background:var(--navy2);border:1px solid var(--border);border-left:4px solid '+color+';border-radius:14px;padding:16px 18px;margin-bottom:12px">'+
+          '<div style="font-family:Syne,sans-serif;font-weight:700;font-size:13px;color:'+color+';margin-bottom:12px">'+title+'</div>'+
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:8px">'+
+            '<div style="background:var(--navy3);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Total</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:20px">'+stats.total+'</div></div>'+
+            '<div style="background:var(--navy3);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Ventas</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;color:var(--green)">'+stats.v+'</div></div>'+
+            '<div style="background:var(--navy3);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Cotizados</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;color:var(--cyan)">'+stats.cot+'</div></div>'+
+            '<div style="background:var(--navy3);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Gestión</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;color:var(--yellow)">'+stats.g+'</div></div>'+
+            '<div style="background:var(--navy3);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Pendiente</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;color:var(--muted)">'+stats.p+'</div></div>'+
+            '<div style="background:var(--navy3);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">No Venta</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;color:var(--red)">'+stats.nv+'</div></div>'+
+            '<div style="background:var(--navy3);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Conv.</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:20px;color:'+color+'">'+stats.conv+'%</div></div>'+
+            (stats.primaV>0?'<div style="background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.15);border-radius:8px;padding:8px 10px;grid-column:span 2"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">💰 Prima Ventas</div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:17px;color:var(--green)">'+fmtARS(stats.primaV)+'</div></div>':'')+
+          '</div>'+
+        '</div>';
+      }
+
+      var campPrep=calcOrig(function(l){return !l.isProspect&&(l.campania||'').toLowerCase().includes('prepaga');});
+      var campSmg=calcOrig(function(l){return !l.isProspect&&(l.campania||'').toLowerCase().includes('smg');});
+      var campOtras=calcOrig(function(l){return !l.isProspect&&(l.campania||'')!==''&&!((l.campania||'').toLowerCase().includes('prepaga')||(l.campania||'').toLowerCase().includes('smg'));});
+      var propRef=calcOrig(function(l){return l.isProspect&&l.origen==='referido';});
+      var propMN=calcOrig(function(l){return l.isProspect&&l.origen==='mercado-natural';});
+      var propMix=calcOrig(function(l){return l.isProspect&&l.origen==='mixta';});
+      var propEmp=calcOrig(function(l){return l.isProspect&&l.origen==='empresa';});
+      var propWeb=calcOrig(function(l){return l.isProspect&&l.origen==='datos-web';});
+      var propOtro=calcOrig(function(l){return l.isProspect&&(l.origen==='otro'||(!l.origen));});
+
+      return'<div style="margin-bottom:20px">'+
+        '<div style="font-family:Syne,sans-serif;font-weight:700;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📦 Campaña por tipo</div>'+
+        origenCard('🏥 Campaña Prepaga','var(--cyan)',campPrep)+
+        origenCard('🏢 Campaña SMG','var(--purple)',campSmg)+
+        origenCard('📋 Otras Campañas','var(--yellow)',campOtras)+
+        '<div style="font-family:Syne,sans-serif;font-weight:700;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 12px">🌱 Datos Propios por origen</div>'+
+        origenCard('👥 Referidos','var(--green)',propRef)+
+        origenCard('🌿 Mercado Natural','var(--cyan)',propMN)+
+        origenCard('🔀 Venta Mixta','var(--purple)',propMix)+
+        origenCard('🏢 Empresa','#ff9800',propEmp)+
+        origenCard('🌐 Datos Web','#00bcd4',propWeb)+
+        origenCard('📌 Otro','var(--muted)',propOtro)+
+      '</div>';
+    })()+
 
     // Filtro por asesor
     '<div class="sechdr" style="margin-bottom:14px">'+
